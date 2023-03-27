@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33502.453
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataQueryLibrary", "DataQueryLibrary\DataQueryLibrary.csproj", "{90BD1685-E3C5-4917-9724-3E22673F7B42}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataQueryTest", "DataQueryTest\DataQueryTest.csproj", "{7B911E3F-512C-4BCB-935C-D96FFFB129A9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{90BD1685-E3C5-4917-9724-3E22673F7B42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90BD1685-E3C5-4917-9724-3E22673F7B42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90BD1685-E3C5-4917-9724-3E22673F7B42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90BD1685-E3C5-4917-9724-3E22673F7B42}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B911E3F-512C-4BCB-935C-D96FFFB129A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B911E3F-512C-4BCB-935C-D96FFFB129A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B911E3F-512C-4BCB-935C-D96FFFB129A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B911E3F-512C-4BCB-935C-D96FFFB129A9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AA8D8352-918C-4797-B30B-3D5410CB1B40}
+	EndGlobalSection
+EndGlobal
