@@ -1,65 +1,100 @@
 ﻿using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace DataQueryLibrary
 {
-    internal enum Operator
+    internal enum ComparisonOperator
     {
-        Equal = ':',
+        Equals = ':',
+        Contains = ';',
         Greater = '>',
-        Less = '<'
+        Less = '<',
     }
 
-    public class DataQueryService<T> where T : class
+    internal enum ConditionalOperator
+    {
+        And = '&',
+        Or = '|',
+    }
+
+    public class DataQueryService
     {
 
-        // name:pipo,age>5
-        public IEnumerable<T> ApplyFilter(IEnumerable<T> entities, string filter)
+        public IEnumerable<T> ApplyFilter<T>(ICollection<T> entities, string filter) where T : class
         {
-            string[] filters = filter.Split(',');
+            string[] filters = filter.Split((char)ConditionalOperator.Or);
 
-            foreach (T entity in entities)
+            for (int i = entities.Count - 1; i > -1; i--)
             {
+                T entity = entities.ElementAt(i);
                 bool isMatch = false;
 
-                for (int i = 0; i < filters.Length; i++)
+                for (int j = 0; j < filters.Length; j++)
                 {
-                    char? comparator = null;
-
-                    foreach (Operator @operator in Enum.GetValues(typeof(Operator)))
+                    string[] subFilters = filters[j].Split((char)ConditionalOperator.And);
+                    for (int k = 0;  k < subFilters.Length; k++)
                     {
-                        if (!filters[i].Contains((char)@operator)) continue;
-                        comparator = (char)@operator;
-                        break;
+                        char? comparator = GetFilterComparator(subFilters[k]);
+                        if (comparator is null) throw new ArgumentException("InvalidComparisonOperator");
+
+                        string[] filterArray = subFilters[k].Trim().Split(comparator!.Value);
+                        if (filterArray.Length != 2) throw new ArgumentException("InvalidFilterValueOrProperty");
+
+                        string propertyName = filterArray[0].TrimEnd(), filterValue = filterArray[1].TrimStart();
+
+                        PropertyInfo property = typeof(T).GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)
+                            ?? throw new ArgumentException("PropertyNotFound");
+
+                        object? propertyValue = property.GetValue(entity);
+                        if (propertyValue is null) continue;
+
+                        isMatch = ValueMatchFilter(comparator!.Value, propertyValue, filterValue);
+                        if (!isMatch) break;
                     }
-
-                    if (comparator is null) throw new ArgumentException("InvalidComparisonOperator");
-
-                    string[] filterArray = filters[i].Trim().Split(comparator!.Value);
-
-                    if (filterArray.Length != 2) throw new ArgumentException("InvalidFilterValueOrProperty");
-
-                    string propertyName = filterArray[0].TrimEnd(), filterValue = filterArray[1].TrimStart();
-                    PropertyInfo property = typeof(T).GetProperty(propertyName) ?? throw new ArgumentException("PropertyNotFound");
-
-                    object? propertValue = property.GetValue(entity);
-
-                    if (propertValue is null) continue;
-
-                    switch (comparator!.Value)
-                    {
-                        case (char)Operator.Equal:
-                            isMatch = propertValue!.ToString() == filterValue;
-                            break;
-                        case (char)Operator.Greater:
-                            if (!IsNumericType(propertValue)) continue;
-                            break;
-                        case (char)Operator.Less:
-                            break;
-                    }
+                    if (isMatch) break;
                 }
+                if (isMatch) continue;
+                entities.Remove(entity);
             }
 
-            throw new NotImplementedException();
+            return entities;
+        }
+
+        private char? GetFilterComparator(string filter)
+        {
+            foreach (ComparisonOperator @operator in Enum.GetValues(typeof(ComparisonOperator)))
+            {
+                if (!filter.Contains((char)@operator)) continue;
+                return (char)@operator;
+            }
+            return null;
+        }
+
+        private bool ValueMatchFilter(char comparator, object propertyValue, string filterValue)
+        {
+            switch (comparator)
+            {
+                case (char)ComparisonOperator.Equals:
+                    return propertyValue.ToString()!.ToUpper() == filterValue.ToUpper();
+
+                case (char)ComparisonOperator.Contains:
+                    if (propertyValue is not string) 
+                        throw new ArgumentException("ValueTypeDoesNotMatchOperator");
+                    return ((string)propertyValue!).ToUpper().Contains(filterValue.ToUpper());
+
+                case (char)ComparisonOperator.Greater:
+                    if (!IsNumericType(propertyValue) || !double.TryParse(filterValue, out double valueG))
+                        throw new ArgumentException("ValueTypeDoesNotMatchOperator");
+                    return Convert.ToDouble(propertyValue!) > valueG;
+
+                case (char)ComparisonOperator.Less:
+                    if (!IsNumericType(propertyValue) || !double.TryParse(filterValue, out double valueL))
+                        throw new ArgumentException("ValueTypeDoesNotMatchOperator");
+                    return Convert.ToDouble(propertyValue!) < valueL;
+
+                default:
+                    return false;
+            }
         }
 
         private bool IsNumericType(object value)

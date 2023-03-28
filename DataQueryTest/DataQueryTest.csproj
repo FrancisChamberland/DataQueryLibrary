@@ -22,4 +22,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\DataQueryLibrary\DataQueryLibrary.csproj" />
+  </ItemGroup>
+
 </Project>
