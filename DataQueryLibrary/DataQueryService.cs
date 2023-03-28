@@ -13,7 +13,7 @@ namespace DataQueryLibrary
 
     internal enum ConditionalOperator
     {
-        And = '&',
+        And = ',',
         Or = '|',
     }
 
@@ -42,7 +42,7 @@ namespace DataQueryLibrary
                         string propertyName = filterArray[0].TrimEnd(), filterValue = filterArray[1].TrimStart();
 
                         PropertyInfo property = typeof(T).GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)
-                            ?? throw new ArgumentException("PropertyNotFound");
+                            ?? throw new ArgumentException("PropertyNotFound", propertyName);
 
                         isMatch = ValueMatchFilter(comparator, property.GetValue(entity), filterValue);
                         if (!isMatch) break;
@@ -54,6 +54,40 @@ namespace DataQueryLibrary
             }
 
             return entities;
+        }
+
+        public IEnumerable<T> ApplyOrder<T>(IEnumerable<T> entities, string order) where T : class
+        {
+            IOrderedEnumerable<T>? orderedEntites = null;
+
+            string[] orders = order.Split((char)ConditionalOperator.And);
+
+            for (int i = 0; i < orders.Length; i++)
+            {
+                string[] orderArray = orders[i].Trim().Split((char)ComparisonOperator.Equals);
+                if (orderArray.Length != 2) throw new ArgumentException("InvalidOrderValueOrProperty");
+
+                string propertyName = orderArray[0].TrimEnd(), orderValue = orderArray[1].TrimStart();
+
+                PropertyInfo property = typeof(T).GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)
+                            ?? throw new ArgumentException("PropertyNotFound", propertyName);
+
+                switch (orderValue)
+                {
+                    case "asc":
+                        orderedEntites = orderedEntites is null ? entities.OrderBy(e => property.GetValue(e)) : 
+                            orderedEntites.ThenBy(e => property.GetValue(e));
+                        break;
+                    case "desc":
+                        orderedEntites = orderedEntites is null ? entities.OrderByDescending(e => property.GetValue(e)) : 
+                            orderedEntites.ThenByDescending(e => property.GetValue(e));
+                        break;
+                    default:
+                        throw new ArgumentException("InvalidOrderValue", orderValue);
+                }
+            }
+
+            return orderedEntites is null ? entities : orderedEntites;
         }
 
         private char? GetFilterComparator(string filter)
