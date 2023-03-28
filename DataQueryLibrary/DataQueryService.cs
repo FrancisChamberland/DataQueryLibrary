@@ -34,10 +34,10 @@ namespace DataQueryLibrary
                     string[] subFilters = filters[j].Split((char)ConditionalOperator.And);
                     for (int k = 0;  k < subFilters.Length; k++)
                     {
-                        char? comparator = GetFilterComparator(subFilters[k]);
-                        if (comparator is null) throw new ArgumentException("InvalidComparisonOperator");
+                        char comparator = GetFilterComparator(subFilters[k])
+                            ?? throw new ArgumentException("InvalidComparisonOperator");
 
-                        string[] filterArray = subFilters[k].Trim().Split(comparator!.Value);
+                        string[] filterArray = subFilters[k].Trim().Split(comparator);
                         if (filterArray.Length != 2) throw new ArgumentException("InvalidFilterValueOrProperty");
 
                         string propertyName = filterArray[0].TrimEnd(), filterValue = filterArray[1].TrimStart();
@@ -45,10 +45,7 @@ namespace DataQueryLibrary
                         PropertyInfo property = typeof(T).GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)
                             ?? throw new ArgumentException("PropertyNotFound");
 
-                        object? propertyValue = property.GetValue(entity);
-                        if (propertyValue is null) continue;
-
-                        isMatch = ValueMatchFilter(comparator!.Value, propertyValue, filterValue);
+                        isMatch = ValueMatchFilter(comparator, property.GetValue(entity), filterValue);
                         if (!isMatch) break;
                     }
                     if (isMatch) break;
@@ -70,34 +67,54 @@ namespace DataQueryLibrary
             return null;
         }
 
-        private bool ValueMatchFilter(char comparator, object propertyValue, string filterValue)
+        private bool ValueMatchFilter(char comparator, object? propertyValue, string filterValue)
         {
             switch (comparator)
             {
                 case (char)ComparisonOperator.Equals:
-                    return propertyValue.ToString()!.ToUpper() == filterValue.ToUpper();
+                    if (filterValue == "null")
+                        return propertyValue is null;
+
+                    if (propertyValue is DateTime && DateTime.TryParse(filterValue, out DateTime dateValue))
+                        return (DateTime)propertyValue == dateValue;
+
+                    return propertyValue is null ? false : propertyValue!.ToString() == filterValue;
 
                 case (char)ComparisonOperator.Contains:
+                    if (propertyValue is null) return false;
                     if (propertyValue is not string) 
                         throw new ArgumentException("ValueTypeDoesNotMatchOperator");
+
                     return ((string)propertyValue!).ToUpper().Contains(filterValue.ToUpper());
 
                 case (char)ComparisonOperator.Greater:
-                    if (!IsNumericType(propertyValue) || !double.TryParse(filterValue, out double valueG))
+                    if (propertyValue is null) return false;
+
+                    if (propertyValue is DateTime && DateTime.TryParse(filterValue, out DateTime dateValueG))
+                        return (DateTime)propertyValue > dateValueG;
+
+                    if (!IsValidNumericType(propertyValue!) || !double.TryParse(filterValue, out double numberValueG))
                         throw new ArgumentException("ValueTypeDoesNotMatchOperator");
-                    return Convert.ToDouble(propertyValue!) > valueG;
+
+                    return Convert.ToDouble(propertyValue!) > numberValueG;
 
                 case (char)ComparisonOperator.Less:
-                    if (!IsNumericType(propertyValue) || !double.TryParse(filterValue, out double valueL))
+                    if (propertyValue is null) return false;
+
+                    if (propertyValue is DateTime && DateTime.TryParse(filterValue, out DateTime dateValueL))
+                        return (DateTime)propertyValue < dateValueL;
+
+                    if (!IsValidNumericType(propertyValue!) || !double.TryParse(filterValue, out double numberValueL))
                         throw new ArgumentException("ValueTypeDoesNotMatchOperator");
-                    return Convert.ToDouble(propertyValue!) < valueL;
+
+                    return Convert.ToDouble(propertyValue!) < numberValueL;
 
                 default:
                     return false;
             }
         }
 
-        private bool IsNumericType(object value)
+        private bool IsValidNumericType(object value)
         {
             return value is byte
                     || value is int
