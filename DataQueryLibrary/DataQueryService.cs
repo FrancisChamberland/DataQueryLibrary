@@ -19,7 +19,6 @@ namespace DataQueryLibrary
 
     public class DataQueryService
     {
-
         public IEnumerable<T> ApplyFilter<T>(ICollection<T> entities, string filter) where T : class
         {
             string[] filters = filter.Split((char)ConditionalOperator.Or);
@@ -75,8 +74,13 @@ namespace DataQueryLibrary
                     if (filterValue == "null")
                         return propertyValue is null;
 
+                    if (propertyValue is null) return false;
+
                     if (propertyValue is DateTime && DateTime.TryParse(filterValue, out DateTime dateValue))
                         return (DateTime)propertyValue == dateValue;
+
+                    if (propertyValue is Enum && int.TryParse(filterValue, out int enumValue))
+                        return (int)propertyValue == enumValue;
 
                     return propertyValue is null ? false : propertyValue!.ToString() == filterValue;
 

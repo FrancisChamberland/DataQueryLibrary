@@ -13,13 +13,13 @@ namespace DataQueryTest
     {
         public ICollection<Entity> Entities { get; } = new List<Entity>
         {
-            new Entity { Name = "John", Age = 25, BirthDate = new(1999, 02, 20), MonthlySalary = 2000, PhoneNumber = "450 939-8234" },
-            new Entity { Name = "Jane", Age = 30, BirthDate = new(2001, 06, 14), MonthlySalary = 4000, PhoneNumber = "450 677-5499" },
-            new Entity { Name = "Jane", Age = 20, BirthDate = new(1999, 12, 15), MonthlySalary = 5000, PhoneNumber = null }, 
-            new Entity { Name = "Bob", Age = 0, BirthDate = new(2005, 10, 3), MonthlySalary = 6000, PhoneNumber = "514 233-666" },
-            new Entity { Name = "Carl", Age = 15, BirthDate = new(2007, 03, 12), MonthlySalary = 100, PhoneNumber = null },
-            new Entity { Name = "Frank", Age = 88, BirthDate = new(1895, 02, 20), MonthlySalary = 15000, PhoneNumber = null },
-            new Entity { Name = "Zack", Age = 52, BirthDate = new(1925, 01, 27), MonthlySalary = 2400, PhoneNumber = "514 444-4444" }
+            new Entity { Name = "John", Age = 25, BirthDate = new(1999, 02, 20), MonthlySalary = 2000, PhoneNumber = "450 939-8234", Gender = Gender.Male },
+            new Entity { Name = "Jane", Age = 30, BirthDate = new(2001, 06, 14), MonthlySalary = 4000, PhoneNumber = "450 677-5499", Gender = Gender.Male },
+            new Entity { Name = "Jane", Age = 20, BirthDate = new(1999, 12, 15), MonthlySalary = 5000, PhoneNumber = null, Gender = Gender.Female }, 
+            new Entity { Name = "Bob", Age = 0, BirthDate = new(2005, 10, 3), MonthlySalary = 6000, PhoneNumber = "514 233-666", Gender = Gender.Female },
+            new Entity { Name = "Carl", Age = 15, BirthDate = new(2007, 03, 12), MonthlySalary = 100, PhoneNumber = null, Gender = Gender.Female },
+            new Entity { Name = "Frank", Age = 88, BirthDate = new(1895, 02, 20), MonthlySalary = 15000, PhoneNumber = null, Gender = Gender.Male },
+            new Entity { Name = "Zack", Age = 52, BirthDate = new(1925, 01, 27), MonthlySalary = 2400, PhoneNumber = "514 444-4444", Gender = Gender.Female }
         };
 
 
@@ -30,7 +30,7 @@ namespace DataQueryTest
 
             IEnumerable<Entity> expectedResult = new List<Entity>
             {
-                new Entity { Name = "John", Age = 25, BirthDate = new(1999, 02, 20), MonthlySalary = 2000, PhoneNumber = "450 939-8234" },
+                new Entity { Name = "John", Age = 25, BirthDate = new(1999, 02, 20), MonthlySalary = 2000, PhoneNumber = "450 939-8234", Gender = Gender.Male },
             };
 
             string filter = "name:John";
@@ -47,7 +47,7 @@ namespace DataQueryTest
 
             IEnumerable<Entity> expectedResult = new List<Entity>
             {
-                new Entity { Name = "Jane", Age = 20, BirthDate = new(1999, 12, 15), MonthlySalary = 5000, PhoneNumber = null },
+                new Entity { Name = "Jane", Age = 20, BirthDate = new(1999, 12, 15), MonthlySalary = 5000, PhoneNumber = null, Gender = Gender.Female },
             };
 
             string filter = "age:20";
@@ -64,10 +64,31 @@ namespace DataQueryTest
 
             IEnumerable<Entity> expectedResult = new List<Entity>
             {
-                new Entity { Name = "Bob", Age = 0, BirthDate = new(2005, 10, 3), MonthlySalary = 6000, PhoneNumber = "514 233-666" },
+                new Entity { Name = "Bob", Age = 0, BirthDate = new(2005, 10, 3), MonthlySalary = 6000, PhoneNumber = "514 233-666", Gender = Gender.Female },
             };
 
             string filter = "birthdate:2005/10/3";
+
+            IEnumerable<Entity> result = queryService.ApplyFilter(Entities, filter);
+
+            Assert.Equal(JsonConvert.SerializeObject(expectedResult), JsonConvert.SerializeObject(result));
+        }
+
+
+        [Fact]
+        public void EqualEnumTest()
+        {
+            DataQueryService queryService = new();
+
+            IEnumerable<Entity> expectedResult = new List<Entity>
+            {
+                new Entity { Name = "Jane", Age = 20, BirthDate = new(1999, 12, 15), MonthlySalary = 5000, PhoneNumber = null, Gender = Gender.Female },
+                new Entity { Name = "Bob", Age = 0, BirthDate = new(2005, 10, 3), MonthlySalary = 6000, PhoneNumber = "514 233-666", Gender = Gender.Female },
+                new Entity { Name = "Carl", Age = 15, BirthDate = new(2007, 03, 12), MonthlySalary = 100, PhoneNumber = null, Gender = Gender.Female },
+                new Entity { Name = "Zack", Age = 52, BirthDate = new(1925, 01, 27), MonthlySalary = 2400, PhoneNumber = "514 444-4444", Gender = Gender.Female }
+            };
+
+            string filter = "gender:1";
 
             IEnumerable<Entity> result = queryService.ApplyFilter(Entities, filter);
 
@@ -81,9 +102,9 @@ namespace DataQueryTest
 
             IEnumerable<Entity> expectedResult = new List<Entity>
             {
-                new Entity { Name = "Jane", Age = 20, BirthDate = new(1999, 12, 15), MonthlySalary = 5000, PhoneNumber = null },
-                new Entity { Name = "Carl", Age = 15, BirthDate = new(2007, 03, 12), MonthlySalary = 100, PhoneNumber = null },
-                new Entity { Name = "Frank", Age = 88, BirthDate = new(1895, 02, 20), MonthlySalary = 15000, PhoneNumber = null },
+                new Entity { Name = "Jane", Age = 20, BirthDate = new(1999, 12, 15), MonthlySalary = 5000, PhoneNumber = null, Gender = Gender.Female },
+                new Entity { Name = "Carl", Age = 15, BirthDate = new(2007, 03, 12), MonthlySalary = 100, PhoneNumber = null, Gender = Gender.Female },
+                new Entity { Name = "Frank", Age = 88, BirthDate = new(1895, 02, 20), MonthlySalary = 15000, PhoneNumber = null, Gender = Gender.Male },
             };
 
             string filter = "phonenumber:null";
@@ -100,9 +121,9 @@ namespace DataQueryTest
 
             IEnumerable<Entity> expectedResult = new List<Entity>
             {
-                new Entity { Name = "John", Age = 25, BirthDate = new(1999, 02, 20), MonthlySalary = 2000, PhoneNumber = "450 939-8234" },
-                new Entity { Name = "Jane", Age = 30, BirthDate = new(2001, 06, 14), MonthlySalary = 4000, PhoneNumber = "450 677-5499" },
-                new Entity { Name = "Jane", Age = 20, BirthDate = new(1999, 12, 15), MonthlySalary = 5000, PhoneNumber = null },
+                new Entity { Name = "John", Age = 25, BirthDate = new(1999, 02, 20), MonthlySalary = 2000, PhoneNumber = "450 939-8234", Gender = Gender.Male },
+                new Entity { Name = "Jane", Age = 30, BirthDate = new(2001, 06, 14), MonthlySalary = 4000, PhoneNumber = "450 677-5499", Gender = Gender.Male },
+                new Entity { Name = "Jane", Age = 20, BirthDate = new(1999, 12, 15), MonthlySalary = 5000, PhoneNumber = null, Gender = Gender.Female },
             };
 
             string filter = "name;j";
@@ -119,10 +140,10 @@ namespace DataQueryTest
 
             IEnumerable<Entity> expectedResult = new List<Entity>
             {
-                new Entity { Name = "John", Age = 25, BirthDate = new(1999, 02, 20), MonthlySalary = 2000, PhoneNumber = "450 939-8234" },
-                new Entity { Name = "Jane", Age = 30, BirthDate = new(2001, 06, 14), MonthlySalary = 4000, PhoneNumber = "450 677-5499" },
-                new Entity { Name = "Frank", Age = 88, BirthDate = new(1895, 02, 20), MonthlySalary = 15000, PhoneNumber = null },
-                new Entity { Name = "Zack", Age = 52, BirthDate = new(1925, 01, 27), MonthlySalary = 2400, PhoneNumber = "514 444-4444" }
+                new Entity { Name = "John", Age = 25, BirthDate = new(1999, 02, 20), MonthlySalary = 2000, PhoneNumber = "450 939-8234", Gender = Gender.Male },
+                new Entity { Name = "Jane", Age = 30, BirthDate = new(2001, 06, 14), MonthlySalary = 4000, PhoneNumber = "450 677-5499", Gender = Gender.Male },
+                new Entity { Name = "Frank", Age = 88, BirthDate = new(1895, 02, 20), MonthlySalary = 15000, PhoneNumber = null, Gender = Gender.Male },
+                new Entity { Name = "Zack", Age = 52, BirthDate = new(1925, 01, 27), MonthlySalary = 2400, PhoneNumber = "514 444-4444", Gender = Gender.Female }
             };
 
             string filter = "age>20";
@@ -149,9 +170,9 @@ namespace DataQueryTest
 
             IEnumerable<Entity> expectedResult = new List<Entity>
             {
-                new Entity { Name = "Jane", Age = 30, BirthDate = new(2001, 06, 14), MonthlySalary = 4000, PhoneNumber = "450 677-5499" },
-                new Entity { Name = "Bob", Age = 0, BirthDate = new(2005, 10, 3), MonthlySalary = 6000, PhoneNumber = "514 233-666" },
-                new Entity { Name = "Carl", Age = 15, BirthDate = new(2007, 03, 12), MonthlySalary = 100, PhoneNumber = null },
+                new Entity { Name = "Jane", Age = 30, BirthDate = new(2001, 06, 14), MonthlySalary = 4000, PhoneNumber = "450 677-5499", Gender = Gender.Male },
+                new Entity { Name = "Bob", Age = 0, BirthDate = new(2005, 10, 3), MonthlySalary = 6000, PhoneNumber = "514 233-666", Gender = Gender.Female },
+                new Entity { Name = "Carl", Age = 15, BirthDate = new(2007, 03, 12), MonthlySalary = 100, PhoneNumber = null, Gender = Gender.Female },
             };
 
             string filter = "birthdate>2000/01/01";
@@ -168,8 +189,8 @@ namespace DataQueryTest
 
             IEnumerable<Entity> expectedResult = new List<Entity>
             {
-                new Entity { Name = "John", Age = 25, BirthDate = new(1999, 02, 20), MonthlySalary = 2000, PhoneNumber = "450 939-8234" },
-                new Entity { Name = "Bob", Age = 0, BirthDate = new(2005, 10, 3), MonthlySalary = 6000, PhoneNumber = "514 233-666" },
+                new Entity { Name = "John", Age = 25, BirthDate = new(1999, 02, 20), MonthlySalary = 2000, PhoneNumber = "450 939-8234", Gender = Gender.Male },
+                new Entity { Name = "Bob", Age = 0, BirthDate = new(2005, 10, 3), MonthlySalary = 6000, PhoneNumber = "514 233-666", Gender = Gender.Female },
             };
 
             string filter = "name:John|age:40|age<5";
@@ -186,8 +207,8 @@ namespace DataQueryTest
 
             IEnumerable<Entity> expectedResult = new List<Entity>
             {
-                new Entity { Name = "Jane", Age = 30, BirthDate = new(2001, 06, 14), MonthlySalary = 4000, PhoneNumber = "450 677-5499" },
-                new Entity { Name = "Frank", Age = 88, BirthDate = new(1895, 02, 20), MonthlySalary = 15000, PhoneNumber = null },
+                new Entity { Name = "Jane", Age = 30, BirthDate = new(2001, 06, 14), MonthlySalary = 4000, PhoneNumber = "450 677-5499", Gender = Gender.Male },
+                new Entity { Name = "Frank", Age = 88, BirthDate = new(1895, 02, 20), MonthlySalary = 15000, PhoneNumber = null, Gender = Gender.Male },
             };
 
             string filter = "name;j&age>25|name;k&age>60";
@@ -198,6 +219,12 @@ namespace DataQueryTest
         }
     }
 
+    public enum Gender
+    {
+        Male,
+        Female
+    }
+
     public class Entity
     {
         public string Name { get; set; } = null!;
@@ -205,5 +232,6 @@ namespace DataQueryTest
         public DateTime BirthDate { get; set; }
         public decimal MonthlySalary { get; set; }
         public string? PhoneNumber { get; set; }
+        public Gender Gender { get; set; }
     }
 }
